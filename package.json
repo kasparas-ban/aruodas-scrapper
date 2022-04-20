@@ -2,7 +2,7 @@
   "name": "scrapper",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "selenium-webdriver": "^4.1.1"
+    "puppeteer": "^13.6.0",
+    "user-agents": "^1.0.992"
   }
 }
