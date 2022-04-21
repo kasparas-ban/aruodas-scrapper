@@ -1,0 +1,8 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es5", "es6", "dom"],
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
