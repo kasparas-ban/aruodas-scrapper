@@ -3,6 +3,7 @@
   "compilerOptions": {
     "lib": ["es5", "es6", "dom"],
   },
+  "project": "scrapper/tsconfig.json",
   "include": ["src"],
   "exclude": ["node_modules"]
 }

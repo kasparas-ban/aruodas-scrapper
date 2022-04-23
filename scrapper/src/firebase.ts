@@ -9,7 +9,7 @@ interface LatestDocuments {
   secondDoc: Document
 }
 
-interface LatestDocumentData {
+export interface LatestDocumentData {
   latestDoc: DocumentListing,
   secondDoc: DocumentListing
 }
@@ -47,7 +47,7 @@ function findTwoLatestDocuments(documents: Document[]): LatestDocuments | undefi
     let latestTime = admin.firestore.Timestamp.fromDate(new Date(0));
     let latestDoc = null as unknown as Document;
 
-    for (let doc of Array.from(docs)) {
+    for (const doc of Array.from(docs)) {
       if (doc.createTime > latestTime) {
         latestTime = doc.createTime;
         latestDoc = doc;
@@ -92,7 +92,7 @@ function compareListings(firstListing: Listing, secondListing: Listing): boolean
   );
 }
 
-function getDocDiff(documents: LatestDocumentData): DataDiff {
+export function getDocDiff(documents: LatestDocumentData): DataDiff {
   const removedListings: Listing[] = [];
   const newListings: Listing[] = [];
   const [latestData, secondData] = [

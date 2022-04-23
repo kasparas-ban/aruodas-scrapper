@@ -1,7 +1,7 @@
 import fs from "fs";
 import puppeteer from "puppeteer";
 import userAgent from "user-agents";
-import { readLatestData, saveLatestDiff, uploadListings } from "./firebase";
+import { saveLatestDiff, uploadListings } from "./firebase";
 import { Listing } from "./interfaces";
 
 (async function main() {
