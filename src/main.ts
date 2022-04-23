@@ -1,7 +1,7 @@
 import fs from "fs";
 import puppeteer from "puppeteer";
 import userAgent from "user-agents";
-import { readLatestData, uploadListings } from "./firebase";
+import { readLatestData, saveLatestDiff, uploadListings } from "./firebase";
 import { Listing } from "./interfaces";
 
 (async function main() {
@@ -31,9 +31,10 @@ import { Listing } from "./interfaces";
     console.log(`Page ${num} is scrapped.`);
   }
 
-  // saveListingsToFile(listings);
-  // await uploadListings({ data: listings });
-  // console.log(await readLatestData());
+  // Upload listing data
+  await uploadListings({ data: listings });
+  // Upload diff data
+  await saveLatestDiff();
 
   await browser.close();
 })();
@@ -95,3 +96,4 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
 
   return listings;
 }
+
