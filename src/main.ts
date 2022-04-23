@@ -1,17 +1,8 @@
 import fs from "fs";
 import puppeteer from "puppeteer";
 import userAgent from "user-agents";
-
-interface Listing {
-  district: string,
-  street: string,
-  price: string,
-  pricePM: string,
-  roomNum: number,
-  area: number,
-  floor: string,
-  link?: string,
-}
+import { readLatestData, uploadListings } from "./firebase";
+import { Listing } from "./interfaces";
 
 (async function main() {
   const browser = await puppeteer.launch();
@@ -30,7 +21,7 @@ interface Listing {
   const pages = [...Array(maxPageNum).keys()].slice(1);
   let listings: Listing[] = [];
 
-  for (const num of pages) {
+  for (const num of [1,2]) {
     await page.waitForTimeout(1000);
     const pageListings = await getListingsFromPage(
       page,
@@ -40,7 +31,9 @@ interface Listing {
     console.log(`Page ${num} is scrapped.`);
   }
 
-  saveListingsToFile(listings);
+  // saveListingsToFile(listings);
+  // await uploadListings({ data: listings });
+  // console.log(await readLatestData());
 
   await browser.close();
 })();
