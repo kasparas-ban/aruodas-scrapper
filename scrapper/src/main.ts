@@ -5,7 +5,7 @@ import { saveLatestDiff, uploadListings } from "./firebase";
 import { Listing } from "./interfaces";
 
 (async function main() {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
   const listingType = [
     "butai",
