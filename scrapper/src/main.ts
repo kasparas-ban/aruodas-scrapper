@@ -21,7 +21,7 @@ import { Listing } from "./interfaces";
   const pages = [...Array(maxPageNum).keys()].slice(1);
   let listings: Listing[] = [];
 
-  for (const num of [1,2]) {
+  for (const num of pages) {
     await page.waitForTimeout(1000);
     const pageListings = await getListingsFromPage(
       page,
