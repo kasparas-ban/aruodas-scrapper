@@ -21,7 +21,7 @@ import { Listing } from "./interfaces";
   const pages = [...Array(maxPageNum).keys()].slice(1);
   let listings: Listing[] = [];
 
-  for (const num of pages) {
+  for (const num of [1]) {
     await page.waitForTimeout(1000);
     const pageListings = await getListingsFromPage(
       page,
@@ -31,10 +31,13 @@ import { Listing } from "./interfaces";
     console.log(`Page ${num} is scrapped.`);
   }
 
+  console.log(listings[0]);
+  saveListingsToFile(listings);
+
   // Upload listing data
-  await uploadListings({ data: listings });
+  // await uploadListings({ data: listings });
   // Upload diff data
-  await saveLatestDiff();
+  // await saveLatestDiff();
 
   await browser.close();
 })();
@@ -66,9 +69,11 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
 
   const listings = await page.evaluate(() => {
     const results: Listing[] = [];
-    const listing = Array.from(document.querySelectorAll(".list-row")).filter(
-      (li) => !!li.querySelector(".list-RoomNum")
-    );
+    const listing = Array.from(document.querySelectorAll(".list-row"))
+      .filter(li =>
+        !!li.querySelector(".list-RoomNum") && !li.closest('.list-search__similar-ads-list')
+      );
+
     listing.forEach((item) => {
       const address = (item.querySelector("h3") as HTMLElement).innerText.split("\n");
       const district = address[0];
@@ -79,6 +84,9 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
       const area = Number((item.querySelector(".list-AreaOverall") as HTMLElement).innerText);
       const floor = (item.querySelector(".list-Floors") as HTMLElement).innerText;
       const link = (item.querySelector("h3 a") as HTMLAnchorElement | null)?.href;
+      const defaultImage = item.querySelector("img")?.src;
+      const extraImages = item.querySelector("img")?.getAttribute('data-extra')?.split(',') || [];
+      const imageList = defaultImage ? [defaultImage].concat(extraImages) : [];
 
       results.push({
         district,
@@ -89,6 +97,7 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
         area,
         floor,
         link,
+        imageList
       });
     });
     return results;
