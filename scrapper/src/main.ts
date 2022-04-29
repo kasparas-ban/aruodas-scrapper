@@ -62,6 +62,17 @@ async function getPagesNum(page: puppeteer.Page, url: string) {
   return numOfPages;
 }
 
+function isListingNew(results: Listing[], listing: Listing) {
+  return results.filter(item => 
+    item.area === listing.area && 
+    item.floor === listing.floor && 
+    item.price === item.price && 
+    item.pricePM === item.pricePM && 
+    item.roomNum === item.roomNum && 
+    item.street === listing.street
+  ).length === 0;
+}
+
 async function getListingsFromPage(page: puppeteer.Page, url: string) {
   await page.setUserAgent(userAgent.toString());
   await page.goto(url, { timeout: 300000 });
@@ -87,7 +98,7 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
       const extraImages = item.querySelector("img")?.getAttribute('data-extra')?.split(',') || [];
       const imageList = defaultImage ? [defaultImage].concat(extraImages) : [];
 
-      results.push({
+      const newListing: Listing = {
         district,
         street,
         price,
@@ -97,11 +108,13 @@ async function getListingsFromPage(page: puppeteer.Page, url: string) {
         floor,
         link,
         imageList
-      });
+      };
+
+      if (isListingNew(results, newListing))
+        results.push(newListing);
     });
     return results;
   });
 
   return listings;
 }
-
