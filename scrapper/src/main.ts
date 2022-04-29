@@ -21,7 +21,7 @@ import { Listing } from "./interfaces";
   const pages = [...Array(maxPageNum).keys()].slice(1);
   let listings: Listing[] = [];
 
-  for (const num of [1]) {
+  for (const num of pages) {
     await page.waitForTimeout(1000);
     const pageListings = await getListingsFromPage(
       page,
@@ -31,13 +31,12 @@ import { Listing } from "./interfaces";
     console.log(`Page ${num} is scrapped.`);
   }
 
-  console.log(listings[0]);
-  saveListingsToFile(listings);
+  // saveListingsToFile(listings);
 
   // Upload listing data
-  // await uploadListings({ data: listings });
+  await uploadListings({ data: listings });
   // Upload diff data
-  // await saveLatestDiff();
+  await saveLatestDiff();
 
   await browser.close();
 })();

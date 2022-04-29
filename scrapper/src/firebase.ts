@@ -109,7 +109,7 @@ export function getDocDiff(documents: LatestDocumentData): DataDiff {
   });
 
   secondData.forEach(listing => {
-    const isListingIncluded = secondData.find(newListing => {
+    const isListingIncluded = latestData.find(newListing => {
        return compareListings(newListing, listing);
     });
     if (!isListingIncluded)
@@ -125,6 +125,7 @@ export function getDocDiff(documents: LatestDocumentData): DataDiff {
 async function saveLatestDiff(): Promise<void> {
   try {
     const latestDocs = await readLatestData();
+    console.log(latestDocs?.latestDoc.data.length, latestDocs?.secondDoc.data.length);
     if (latestDocs) {
       const currentDate = Date.now().toString();
       const docDiff = getDocDiff(latestDocs);
