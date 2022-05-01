@@ -1,7 +1,7 @@
 import fs from "fs";
 import puppeteer from "puppeteer";
 import userAgent from "user-agents";
-import { saveLatestDiff, uploadListings } from "./firebase";
+import { updateData, saveDiff } from "./database";
 import { Listing } from "./interfaces";
 
 (async function main() {
@@ -33,12 +33,13 @@ import { Listing } from "./interfaces";
 
   // saveListingsToFile(listings);
 
-  // Upload listing data
-  await uploadListings({ data: listings });
   // Upload diff data
-  await saveLatestDiff();
+  await saveDiff(listings);
+  // Upload listing data
+  await updateData(listings);
 
   await browser.close();
+  process.exit();
 })();
 
 function saveListingsToFile(listings: Listing[]) {
@@ -62,22 +63,19 @@ async function getPagesNum(page: puppeteer.Page, url: string) {
   return numOfPages;
 }
 
-function isListingNew(results: Listing[], listing: Listing) {
-  return results.filter(item => 
-    item.area === listing.area && 
-    item.floor === listing.floor && 
-    item.price === item.price && 
-    item.pricePM === item.pricePM && 
-    item.roomNum === item.roomNum && 
-    item.street === listing.street
-  ).length === 0;
-}
-
 async function getListingsFromPage(page: puppeteer.Page, url: string) {
   await page.setUserAgent(userAgent.toString());
   await page.goto(url, { timeout: 300000 });
 
   const listings = await page.evaluate(() => {
+    const isListingNew = (results: Listing[], listing: Listing) => {
+      return results.filter(item => 
+        item.area === listing.area && 
+        item.floor === listing.floor &&
+        item.roomNum === item.roomNum && 
+        item.street === listing.street
+      ).length === 0;
+    }
     const results: Listing[] = [];
     const listing = Array.from(document.querySelectorAll(".list-row"))
       .filter(li =>

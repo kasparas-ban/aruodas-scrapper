@@ -95,6 +95,8 @@ function Home() {
   const [allDiffs, setAllDiffs] = useState<Diff[]>([]);
   const aggregatedListings = aggregateListings(allDiffs);
 
+  console.log(allDiffs);
+
   const addedListingsInDayNum = (date: string) => {
     let addedNum = 0;
     if (aggregatedListings[date])

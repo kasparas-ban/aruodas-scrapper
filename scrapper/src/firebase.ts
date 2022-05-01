@@ -1,4 +1,4 @@
-import admin = require("firebase-admin");
+import admin from "firebase-admin";
 import { DocumentListing, Listing } from "./interfaces";
 require('dotenv').config();
 
@@ -40,6 +40,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const dataCollectionName = 'aruodasData';
 const diffCollectionName = 'aruodasDiff';
+const aruodasDataDoc = 'currentAruodasData';
 
 function findTwoLatestDocuments(documents: Document[]): LatestDocuments | undefined {
   if (documents.length === 0) return undefined;
@@ -65,21 +66,6 @@ function findTwoLatestDocuments(documents: Document[]): LatestDocuments | undefi
   return latestDocs;
 }
 
-async function readLatestData(): Promise<LatestDocumentData | undefined> {
-  try {
-    const collectionRef = db.collection(dataCollectionName);
-    const querySnapshot = (await collectionRef.get()).docs;
-    const latestDocs = findTwoLatestDocuments(querySnapshot);
-
-    return latestDocs ? {
-      latestDoc: latestDocs.latestDoc.data() as DocumentListing,
-      secondDoc: latestDocs.secondDoc.data() as DocumentListing
-    } : undefined;
-  } catch (e) {
-    console.error("Error receiving document: ", e);
-  }
-}
-
 function compareListings(firstListing: Listing, secondListing: Listing): boolean {
   return (
     firstListing.district === secondListing.district &&
@@ -92,24 +78,65 @@ function compareListings(firstListing: Listing, secondListing: Listing): boolean
   );
 }
 
-export function getDocDiff(documents: LatestDocumentData): DataDiff {
+async function updateData1(listings: DocumentListing): Promise<void> {
+  try {
+    // await db
+    //   .collection(dataCollectionName)
+    //   .doc(aruodasDataDoc)
+    //   .set(listings);
+    console.log('Successfully overwritten Aruodas data.');
+  } catch (e) {
+    console.error("Error updating the document: ", e);
+  }
+}
+
+async function saveDiff(newListings: Listing[]): Promise<void> {
+  try {
+    const oldAruodasData = ((await db.collection(dataCollectionName).doc(aruodasDataDoc).get())
+      .data() as DocumentListing).data;
+    if (!oldAruodasData) throw new Error("No data document found!");
+    const newDiffDoc = getDocDiff(oldAruodasData, newListings);
+
+    const currentDate = new Date();
+    const diffName = currentDate.getFullYear()+'-'+currentDate.getMonth()+'-'+currentDate.getDate();
+
+    const oldDiffDoc = await db.collection(diffCollectionName).doc(diffName).get();
+    const oldDiffData = oldDiffDoc.data() as DataDiff;
+
+    console.log(newDiffDoc.new.length, newDiffDoc.removed.length);
+
+    if (oldDiffDoc.exists) {
+      const newListings = oldDiffData.new.concat(newDiffDoc.new);
+      const removedListings = oldDiffData.removed.concat(newDiffDoc.removed);
+      const updatedDiff = { new: newListings, removed: removedListings };
+      db.collection(diffCollectionName)
+        .doc(diffName)
+        .set(updatedDiff);
+    } else {
+      db.collection(diffCollectionName)
+        .doc(diffName)
+        .set(newDiffDoc);
+    }
+    console.log('Successfully added a document diff to DB.');
+  } catch (e) {
+    console.error('Failed to save the diff to the database.')
+  }
+}
+
+function getDocDiff(oldData: Listing[], newData: Listing[]): DataDiff {
   const removedListings: Listing[] = [];
   const newListings: Listing[] = [];
-  const [latestData, secondData] = [
-    documents.latestDoc.data, 
-    documents.secondDoc.data
-  ];
 
-  latestData.forEach(listing => {
-    const isListingIncluded = secondData.find(secListing => {
+  newData.forEach(listing => {
+    const isListingIncluded = oldData.find(secListing => {
        return compareListings(secListing, listing);
     });
     if (!isListingIncluded)
       newListings.push(listing);
   });
 
-  secondData.forEach(listing => {
-    const isListingIncluded = latestData.find(newListing => {
+  oldData.forEach(listing => {
+    const isListingIncluded = newData.find(newListing => {
        return compareListings(newListing, listing);
     });
     if (!isListingIncluded)
@@ -122,35 +149,4 @@ export function getDocDiff(documents: LatestDocumentData): DataDiff {
   }
 }
 
-async function saveLatestDiff(): Promise<void> {
-  try {
-    const latestDocs = await readLatestData();
-    console.log(latestDocs?.latestDoc.data.length, latestDocs?.secondDoc.data.length);
-    if (latestDocs) {
-      const currentDate = Date.now().toString();
-      const docDiff = getDocDiff(latestDocs);
-      await db
-        .collection(diffCollectionName)
-        .doc(currentDate)
-        .set(docDiff);
-    }
-    console.log('Successfully added a document diff to DB.');
-  } catch (e) {
-    console.error('Failed to save the diff to the database.')
-  }
-}
-
-async function uploadListings(listings: DocumentListing): Promise<void> {
-  try {
-    const currentDate = Date.now().toString();
-    await db
-      .collection(dataCollectionName)
-      .doc(currentDate)
-      .set(listings);
-    console.log('Successfully added a document to DB.');
-  } catch (e) {
-    console.error("Error uploading document: ", e);
-  }
-}
-
-export { readLatestData, uploadListings, saveLatestDiff };
+export { updateData1, saveDiff };

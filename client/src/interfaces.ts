@@ -7,6 +7,7 @@ export interface Listing {
   area: number,
   floor: string,
   link?: string,
+  imageList: string[],
 }
 
 export interface DocumentListing {
