@@ -1,41 +1,17 @@
 import { useEffect, useState } from 'react';
 import Calendar, { CalendarTileProperties } from 'react-calendar';
-import getDiffs, { Diff } from './firebase';
-import './Home.css';
-import 'react-calendar/dist/Calendar.css';
-import { Listing } from './interfaces';
+import { AllDiffData, DiffDB, getAllDiffs } from './database';
 import ListingContainer from './ListingContainer';
-
-interface IListingList {
-  aggregatedListings: AggregatedListings
-}
-
-type AggregatedListings = {
-  [key: string]: Diff[];
-};
-
-// interface DataDiff {
-//   new: Listing[],
-//   removed: Listing[]
-// }
-
-function aggregateListings(diffs: Diff[]) {
-  let listings: AggregatedListings = {};
-  diffs.forEach(diff => {
-    const dateKey = diff.date.toLocaleDateString();
-    let oldDiffs = listings[dateKey] ? [...listings[dateKey]] : [];
-    listings = { ...listings, [dateKey]: [...oldDiffs, diff] };
-  });
-  return listings;
-}
+import 'react-calendar/dist/Calendar.css';
+import './Home.css';
 
 interface Results {
-  addedListings: Listing[],
-  removedListings: Listing[]
+  diffData?: DiffDB
 }
 
-function ResultsList({ addedListings, removedListings }: Results) {
-  console.log(removedListings);
+function ResultsList({ diffData }: Results) {
+  const newListings = diffData?.new || [];
+  const removedListings = diffData?.removed || [];
   return (
     <div className='text-white text-center mb-8'>
       <div>
@@ -49,7 +25,7 @@ function ResultsList({ addedListings, removedListings }: Results) {
           <div>Kaina už kvadratą</div>
           <div>Kaina</div>
         </div>
-        {addedListings.map((listing, index) => (
+        {newListings.map((listing, index) => (
           <div key={index}>
             <ListingContainer listing={listing} />
           </div>
@@ -92,41 +68,17 @@ function CalendarDay({ addedNum, removedNum }: ICalendarDay) {
 
 function Home() {
   const [value, onChange] = useState(new Date());
-  const [allDiffs, setAllDiffs] = useState<Diff[]>([]);
-  const aggregatedListings = aggregateListings(allDiffs);
+  const [allDiffs, setAllDiffs] = useState<AllDiffData>({});
 
-  console.log(allDiffs);
+  // console.log('allDiffs:\n', allDiffs['2022-4-2']);
 
-  const addedListingsInDayNum = (date: string) => {
-    let addedNum = 0;
-    if (aggregatedListings[date])
-      aggregatedListings[date].forEach(diff => addedNum += diff.diff.new.length);
-    return addedNum;
-  };
-
-  const removedListingsInDayNum = (date: string) => {
-    let removedNum = 0;
-    if (aggregatedListings[date])
-      aggregatedListings[date].forEach(diff => removedNum += diff.diff.removed.length);
-    return removedNum;
-  };
-
-  const addedListingsInDay = (date: string) => {
-    let addedListings: Listing[] = [];
-    if (aggregatedListings[date])
-      aggregatedListings[date].forEach(diff => addedListings = [...addedListings, ...diff.diff.new]);
-    return addedListings;
-  };
-
-  const removedListingsInDay = (date: string) => {
-    let removedListings: Listing[] = [];
-    if (aggregatedListings[date])
-      aggregatedListings[date].forEach(diff => removedListings = [...removedListings, ...diff.diff.removed]);
-    return removedListings;
-  };
+  const getDate = (day: Date) =>
+    day.getFullYear() + '-' + day.getMonth() + '-' + day.getDate();
 
   useEffect(() => {
-    getDiffs().then(res => setAllDiffs(res));
+    getAllDiffs().then(allDiffData => {
+      if (allDiffData) setAllDiffs(allDiffData);
+    })
   }, []);
 
   return (
@@ -142,15 +94,14 @@ function Home() {
           value={value}
           tileContent={day =>
             <CalendarDay
-              addedNum={addedListingsInDayNum(day.date.toLocaleDateString())}
-              removedNum={removedListingsInDayNum(day.date.toLocaleDateString())}
+              addedNum={allDiffs[getDate(day.date)]?.newNum || 0}
+              removedNum={allDiffs[getDate(day.date)]?.removedNum || 0}
             />
           }
         />
       </div>
       <ResultsList
-        addedListings={addedListingsInDay(value.toLocaleDateString())}
-        removedListings={removedListingsInDay(value.toLocaleDateString())}
+        diffData={allDiffs[getDate(value)]}
       />
     </div>
   );

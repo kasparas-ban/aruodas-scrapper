@@ -3,11 +3,15 @@ import { Listing } from "./interfaces";
 require('dotenv').config();
 
 interface DiffObject {
+  newNum: number,
+  removedNum: number,
   new: Listing[],
   removed: Listing[]
 }
 
 interface DiffDB {
+  newNum: number,
+  removedNum: number,
   new?: Listing[],
   removed?: Listing[]
 }
@@ -60,9 +64,13 @@ async function saveDiff(newListings: Listing[]): Promise<void> {
     const oldDiffData = oldDiff.exists() ? oldDiff.val() as DiffDB : null;
 
     if (!!oldDiffData) {
-      const updatedDiff = {
-        new: oldDiffData.new ? oldDiffData.new.concat(newDiffData.new) : newDiffData.new,
-        removed: oldDiffData.removed ? oldDiffData.removed.concat(newDiffData.removed) : newDiffData.removed,
+      const updatedNewListings = oldDiffData.new ? oldDiffData.new.concat(newDiffData.new) : newDiffData.new;
+      const updatedRemovedListings = oldDiffData.removed ? oldDiffData.removed.concat(newDiffData.removed) : newDiffData.removed;
+      const updatedDiff: DiffObject = {
+        newNum: updatedNewListings.length,
+        removedNum: updatedRemovedListings.length,
+        new: updatedNewListings,
+        removed: updatedRemovedListings
       }
       await diffRef.set(updatedDiff);
     } else {
@@ -95,6 +103,8 @@ function getDiffObj(oldData: Listing[], newData: Listing[]): DiffObject {
   });
 
   return {
+    newNum: newListings.length,
+    removedNum: removedListings.length,
     new: newListings,
     removed: removedListings
   }
