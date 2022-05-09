@@ -48,7 +48,6 @@ async function updateData(listings: Listing[]): Promise<void> {
   }
 }
 
-
 async function saveDiff(newListings: Listing[]): Promise<void> {
   const currentDate = new Date();
   const diffDate = currentDate.getFullYear()+'-'+currentDate.getMonth()+'-'+currentDate.getDate();
@@ -112,11 +111,8 @@ function getDiffObj(oldData: Listing[], newData: Listing[]): DiffObject {
 
 function compareListings(firstListing: Listing, secondListing: Listing): boolean {
   return (
-    firstListing.district === secondListing.district &&
     firstListing.street === secondListing.street &&
     firstListing.price === secondListing.price &&
-    firstListing.pricePM === secondListing.pricePM &&
-    firstListing.roomNum === secondListing.roomNum &&
     firstListing.area === secondListing.area &&
     firstListing.floor === secondListing.floor
   );
