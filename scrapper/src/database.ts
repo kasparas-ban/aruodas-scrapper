@@ -112,7 +112,7 @@ function getDiffObj(oldData: Listing[], newData: Listing[]): DiffObject {
 function compareListings(firstListing: Listing, secondListing: Listing): boolean {
   return (
     firstListing.street === secondListing.street &&
-    firstListing.price === secondListing.price &&
+    firstListing.roomNum === secondListing.roomNum &&
     firstListing.area === secondListing.area &&
     firstListing.floor === secondListing.floor
   );
